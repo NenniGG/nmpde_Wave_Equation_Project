@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<Xdmf Version="3.0">
+  <Domain>
+    <Grid Name="WaveSimulation" GridType="Uniform">
+      <Time Value="1" />
+      <Topology TopologyType="2DRectMesh" Dimensions="800 800"/>
+      <Geometry GeometryType="XY">
+        <DataItem Format="HDF" DataType="Float" Dimensions="640000 2">
+          solution-1.h5:/Mesh/Coordinates
+        </DataItem>
+      </Geometry>
+      <Attribute Name="Solution" AttributeType="Scalar" Center="Node">
+        <DataItem Format="HDF" DataType="Float" Dimensions="640000">
+          solution-1.h5:/Solution/Data
+        </DataItem>
+      </Attribute>
+    </Grid>
+  </Domain>
+</Xdmf>
