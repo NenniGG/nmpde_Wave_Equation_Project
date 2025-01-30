@@ -9,7 +9,7 @@
           solution-1.h5:/Mesh/Coordinates
         </DataItem>
       </Geometry>
-      <Attribute Name="Solution" AttributeType="Scalar" Center="Node">
+      <Attribute Name="solution" Center="Node">
         <DataItem Format="HDF" DataType="Float" Dimensions="640000">
           solution-1.h5:/Solution/Data
         </DataItem>
