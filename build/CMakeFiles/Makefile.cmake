@@ -7,11 +7,11 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/francescapieruz/nmpde-labs-aa-24-25/common/cmake-common.cmake"
-  "/home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project/CMakeLists.txt"
+  "/home/jellyfish/shared-folder/PDE/Project/CMakeLists.txt"
   "CMakeFiles/3.28.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.1/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.28.1/CMakeSystem.cmake"
+  "/home/jellyfish/shared-folder/PDE/common/cmake-common.cmake"
   "/u/sw/toolchains/gcc-glibc/11.2.0/base/share/cmake-3.28/Modules/CMakeCCompiler.cmake.in"
   "/u/sw/toolchains/gcc-glibc/11.2.0/base/share/cmake-3.28/Modules/CMakeCCompilerABI.c"
   "/u/sw/toolchains/gcc-glibc/11.2.0/base/share/cmake-3.28/Modules/CMakeCInformation.cmake"

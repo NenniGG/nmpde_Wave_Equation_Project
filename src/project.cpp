@@ -1,66 +1,80 @@
+//libraries
 #include "WaveSolver.hpp"
 #include <cmath>
 #include <random>
+//end 
 
-// Funzione per generare un numero casuale in un intervallo [min, max]
+
+//random number generation utility
 double random_double(double min, double max) {
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<double> dist(min, max);
-    return dist(rng);
+    std::random_device rd;
+    std::mt19937 gen(rd()); //Mersenne Twister generator
+    std::uniform_real_distribution<> dis(min, max);
+    return dis(gen);
 }
-//Fine funzione 
+//end
 
 
+//start
+int random_int(int min, int max) {
+    std::random_device rd;
+    std::mt19937 gen(rd()); //Mersenne Twister generator
+    std::uniform_int_distribution<> dis(min, max);
+    return dis(gen);
+}
+//end 
 
-//Inizio main
-//Chiamo le funzioni/metodi creti nel file header e nel file cpp 
+
+//start main 
 int main() {
-     // Generazione casuale di parametri principali
-    const double Lx = random_double(5.0, 20.0);  // Dimensione dominio Lx
-    const double Ly = random_double(5.0, 20.0);  // Dimensione dominio Ly
-    const int Nx = static_cast<int>(random_double(10, 100));  // Gradi di libertà Nx
-    const int Ny = static_cast<int>(random_double(10, 100));  // Gradi di libertà Ny
-    const double T = random_double(0.5, 5.0);  // Tempo totale T
-    const double dt = random_double(0.01, 0.2);  // Passo temporale dt
+   //randomly generating the simulation parameters
+    double Lx = random_double(5.0, 70.0);  //domain size Lx
+    double Ly = random_double(5.0, 70.0);  //domain size Ly
+    int Nx = random_int(10, 250);           //degrees of freedom Nx
+    int Ny = random_int(10, 250);           //degrees of freedom Ny
+    double T = random_double(0.5, 25.0);    //total time T
+    double dt = random_double(0.01, 1.0);   //time step dt
 
-    // Creazione del solver con parametri casuali
+    //creation of the solver with random parameters 
     WaveSolver solver(Lx, Ly, Nx, Ny, T, dt);
 
-    // Generazione casuale di condizioni iniziali u0 e u1
-    solver.set_initial_conditions(
-        [](double x, double y) { 
-            return std::sin(random_double(0.1, 2.0) * M_PI * x) * std::sin(random_double(0.1, 2.0) * M_PI * y); 
-        },
-        [](double x, double y) { 
-            return random_double(0.0, 1.0) * std::cos(random_double(0.1, 2.0) * M_PI * x); 
-        }
-    );
-
-    // Generazione casuale della funzione sorgente
-    auto source_function = [](double x, double y, double t) {
-        return std::sin(random_double(0.1, 2.0) * M_PI * x) * 
-               std::sin(random_double(0.1, 2.0) * M_PI * y) * 
-               std::cos(random_double(0.1, 2.0) * M_PI * t);
+    //random creation of initial condition u0 and u1
+    auto random_u0 = [](double x, double y) {
+        return std::sin(M_PI * x) * std::sin(M_PI * y);
     };
-    solver.set_source_function(source_function);
-
-    // Generazione casuale delle condizioni al contorno
-    auto boundary_condition = [](double x, double y, double t) {
-        return random_double(0.0, 1.0) * std::sin(random_double(0.1, 2.0) * M_PI * t);
+    auto random_u1 = [](double x, double y) {
+        return 0.0;  //v0=0
     };
 
-    solver.set_boundary_condition(boundary_condition);
+    //set intial conditions 
+    solver.set_initial_conditions(random_u0, random_u1);
 
-    // Risolvi con il metodo Newmark
+    //random source generation
+    auto random_source = [](double x, double y, double t) {
+        return std::sin(M_PI * x) * std::sin(M_PI * y) * std::cos(t);
+    };
+    solver.set_source_function(random_source);
+
+    //boundary conditions
+    auto random_boundary = [](double x, double y, double t) {
+        return 0.0;  //fixed 
+    };
+    solver.set_boundary_condition(random_boundary);
+
+    std::cout << "Solution with Newmark...\n";
     solver.solve_newmark();
 
-    // Calcola l'errore
-    solver.calculate_error();
+    std::cout << "Solution with Crank-Nicolson...\n";
+    solver.solve_crank_nicolson();
 
-    // Test di convergenza
-    solver.test_convergence();
-
+    //analysis of perfomance 
+    std::cout << "Analisi delle prestazioni:\n";
     solver.analyze_performance();
+
+    //convergence test 
+    std::cout << "Convergence test:\n";
+    solver.test_convergence();
 
     return 0;
 }
+//end main 

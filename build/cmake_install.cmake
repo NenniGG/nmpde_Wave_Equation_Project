@@ -1,4 +1,4 @@
-# Install script for directory: /home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project
+# Install script for directory: /home/jellyfish/shared-folder/PDE/Project
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/jellyfish/shared-folder/PDE/Project/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

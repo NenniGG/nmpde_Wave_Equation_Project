@@ -1,89 +1,97 @@
 #ifndef WAVESOLVER_HPP
 #define WAVESOLVER_HPP
 
-// Inclusione delle librerie necessarie da deal.II per il calcolo numerico.
-#include <deal.II/base/function.h>              // Per la gestione delle funzioni matematiche
-#include <deal.II/grid/tria.h>                  // Per la gestione della triangolazione
-#include <deal.II/dofs/dof_handler.h>           // Per la gestione dei gradi di libertà
-#include <deal.II/fe/fe_q.h>                    // Per l'elemento finito Q
-#include <deal.II/lac/sparse_matrix.h>          // Per le matrici sparse
-#include <deal.II/lac/vector.h>                 // Per i vettori (soluzioni, ecc.)
-#include <deal.II/lac/solver_cg.h>              // Per l'uso del solver CG (Conjugate Gradient)
-#include <deal.II/lac/precondition.h>           // Per l'uso del precondizionatore
-#include <functional>                           // Per l'uso delle funzioni std::function
 
-// La classe WaveSolver si occupa di risolvere l'equazione delle onde
-// usando metodi numerici come Newmark e Crank-Nicolson.
+//include the necessary deal.II libraries for numerical computation
+#include <deal.II/base/function.h>              //for handling mathematical functions
+#include <deal.II/grid/tria.h>                  //for handling triangulation
+#include <deal.II/dofs/dof_handler.h>           //for handling degrees of freedom
+#include <deal.II/fe/fe_q.h>                    //for finite element Q element
+#include <deal.II/lac/sparse_matrix.h>          //for sparse matrices
+#include <deal.II/lac/vector.h>                 //for vectors (solutions, etc.)
+#include <deal.II/lac/solver_cg.h>              //for using the CG (Conjugate Gradient) solver
+#include <deal.II/lac/precondition.h>           //for using preconditioners
+#include <functional>                           //for using std::function objects
+//end libraries 
+
+
+//the WaveSolver class is responsible for solving the wave equation using numerical methods such as Newmark and Crank-Nicolson
 class WaveSolver {
 public:
-    // Costruttore della classe, che definisce le dimensioni del dominio e il passo temporale.
-    // Lx, Ly sono le dimensioni del dominio 2D.
-    // Nx, Ny sono il numero di suddivisioni (gradi di libertà per ciascuna direzione).
-    // T è il tempo finale, mentre dt è il passo temporale.
+    //constructor of the class, which defines the dimensions of the domain and the time step. Lx, Ly are the dimensions of the 2D domain
+    //Nx, Ny are the number of subdivisions (degrees of freedom for each direction)
+    //T is the final time, while dt is the time step
     WaveSolver(double Lx, double Ly, int Nx, int Ny, double T, double dt);
 
-    // Funzione per impostare le condizioni iniziali di u0 (posizione iniziale) e u1 (velocità iniziale).
-    // Le funzioni sono passate come oggetti std::function che accettano due variabili (x, y).
+    //function to set the initial conditions for u0 (initial position) and u1 (initial velocity)
+    //the functions are passed as std::function objects that accept two variables (x, y)
     void set_initial_conditions(const std::function<double(double, double)> &u0,
                                 const std::function<double(double, double)> &u1);
 
-    // Funzione per impostare le condizioni al contorno, in funzione del tempo.
-    // La funzione g accetta le coordinate (x, y) e il tempo t, ed è definita come std::function.
+    //function to set the boundary conditions, depending on time
+    //the function g accepts the coordinates (x, y) and the time t, and is defined as a std::function
     void set_boundary_condition(const std::function<double(double, double, double)> &g);
 
-    // Funzione per impostare il termine sorgente f, che dipende dalle coordinate spaziali (x, y) e dal tempo t.
-    // Anch'essa è una funzione definita tramite std::function.
+    //function to set the source term f, which depends on the spatial coordinates (x, y) and time t
+    //this is also a function defined via std::function
     void set_source_function(const std::function<double(double, double, double)> &f);
 
-    // Funzione per risolvere l'equazione usando il metodo di Newmark.
+    void output_vtk(double time);
+
+    void output_to_dx(double time);
+
+    //function to solve the equation using the Newmark method
     void solve_newmark();
 
-    // Funzione per risolvere l'equazione usando il metodo di Crank-Nicolson.
+    //function to solve the equation using the Crank-Nicolson method
     void solve_crank_nicolson();
 
-    // Funzione per analizzare le prestazioni del solver (es. il tempo di calcolo).
+    //function to analyze the performance of the solver (e.g., computation time)
     void analyze_performance() const;
 
-    // Funzione per calcolare l'errore tra la soluzione numerica e la soluzione esatta.
-    // Restituisce un valore di errore.
-    double calculate_error(); // Modifica della dichiarazione
+    //function to calculate the error between the numerical solution and the exact solution
+    //it returns an error value
+    double calculate_error(); 
 
-    // Funzione per testare la convergenza del metodo numerico (convergenza in funzione del passo spaziale o temporale).
-    void test_convergence();  // Dichiarazione della funzione
+    //function to test the convergence of the numerical method (convergence with respect to spatial or temporal steps)
+    void test_convergence();  //declaration of the function
+
 
 private:
-    // Funzione per impostare il sistema lineare (matrici, vettori, ecc.) per la soluzione numerica.
+    dealii::Vector<double> system_rhs; //declaration of the RHS vector
+
+    //function to set up the linear system (matrices, vectors, etc.) for the numerical solution
     void setup_system();
 
-    // Funzione per applicare le condizioni al contorno su ciascun passo temporale.
+    //function to apply boundary conditions at each time step
     void apply_boundary_conditions(double time);
 
-    // Funzione per ripristinare le soluzioni a valori iniziali, prima di un nuovo passo temporale.
+    //function to reset the solutions to initial values before a new time step
     void reset_solutions();
 
-    // Parametri principali della simulazione:
-    const double Lx, Ly;  // Dimensioni del dominio in 2D.
-    const int Nx, Ny;      // Numero di gradi di libertà nelle due direzioni spaziali.
-    const double T, dt;    // Tempo finale della simulazione e passo temporale.
+    //main simulation parameters:
+    const double Lx, Ly;  //dimensions of the 2D domain
+    const int Nx, Ny;      //number of degrees of freedom in the two spatial directions
+    const double T, dt;    //final time of the simulation and time step
 
-    // Gli oggetti deal.II necessari per rappresentare il dominio e le soluzioni.
-    dealii::Triangulation<2> triangulation;  // Rappresentazione della triangolazione 2D del dominio.
-    dealii::FE_Q<2> fe;                     // Funzione di base degli elementi finiti (ordine 2).
-    dealii::DoFHandler<2> dof_handler;      // Gestore dei gradi di libertà per il sistema 2D.
+    //deal.II objects needed to represent the domain and the solutions
+    dealii::Triangulation<2> triangulation;  //representation of the 2D domain triangulation
+    dealii::FE_Q<2> fe;                     //finite element basis (order 2)
+    dealii::DoFHandler<2> dof_handler;      //degree of freedom handler for the 2D system
 
-    // Matrici e vettori per il sistema lineare, contenenti le soluzioni e i termini sorgente.
-    dealii::SparsityPattern sparsity_pattern;   // Modello della struttura sparsa della matrice.
-    dealii::SparseMatrix<double> system_matrix; // La matrice del sistema lineare.
+    //matrices and vectors for the linear system, containing the solutions and source terms
+    dealii::SparsityPattern sparsity_pattern;   //pattern of the sparse matrix structure
+    dealii::SparseMatrix<double> system_matrix; //the linear system matrix
     
-    // Vettori per contenere le soluzioni ai vari tempi e il vettore del termine destro (rhs).
-    dealii::Vector<double> solution;           // Vettore che contiene la soluzione corrente.
-    dealii::Vector<double> old_solution;      // Soluzione al passo temporale precedente.
-    dealii::Vector<double> older_solution;    // Soluzione al passo temporale antecedente.
-    dealii::Vector<double> rhs_vector;        // Vettore del termine destro del sistema lineare.
+    //vectors to hold the solutions at different time steps and the right-hand side (rhs) vector
+    dealii::Vector<double> solution;           //vector holding the current solution
+    dealii::Vector<double> old_solution;      //solution at the previous time step
+    dealii::Vector<double> older_solution;    //solution at the time step before the previous
+    dealii::Vector<double> rhs_vector;        //right-hand side vector for the linear system
 
-    // Funzioni sorgente e al contorno, definite come funzioni generiche.
-    std::function<double(double, double, double)> boundary_condition;  // Condizioni al contorno.
-    std::function<double(double, double, double)> source_function;     // Funzione sorgente.
+    //source and boundary functions, defined as generic functions
+    std::function<double(double, double, double)> boundary_condition;  //boundary conditions
+    std::function<double(double, double, double)> source_function;     //source function
 };
 
 #endif // WAVESOLVER_HPP
