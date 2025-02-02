@@ -23,6 +23,15 @@ public:
     //T is the final time, while dt is the time step
     WaveSolver(double Lx, double Ly, int Nx, int Ny, double T, double dt);
 
+
+    // Dichiarazione della funzione che verifica NaN e infini nei vettori
+    void check_for_nan_in_vector(dealii::Vector<double>& vec);
+
+    // Dichiarazione della funzione che verifica la matrice di sistema
+   // Dichiarazione della funzione che verifica la matrice di sistema
+void check_for_empty_matrix(const dealii::SparseMatrix<double>& matrix);
+
+
     //function to set the initial conditions for u0 (initial position) and u1 (initial velocity)
     //the functions are passed as std::function objects that accept two variables (x, y)
     void set_initial_conditions(const std::function<double(double, double)> &u0,
