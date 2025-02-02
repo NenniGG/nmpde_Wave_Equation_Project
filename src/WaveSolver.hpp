@@ -63,6 +63,11 @@ private:
     //function to set up the linear system (matrices, vectors, etc.) for the numerical solution
     void setup_system();
 
+    //support function that builds system matrix
+    void assemble_system_matrix();
+
+    bool solve_linear_system(dealii::SparseMatrix<double>& matrix, dealii::Vector<double>& sol, const dealii::Vector<double>& rhs);
+
     //function to apply boundary conditions at each time step
     void apply_boundary_conditions(double time);
 

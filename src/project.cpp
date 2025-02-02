@@ -28,12 +28,19 @@ int random_int(int min, int max) {
 //start main 
 int main() {
    //randomly generating the simulation parameters
-    double Lx = random_double(5.0, 70.0);  //domain size Lx
-    double Ly = random_double(5.0, 70.0);  //domain size Ly
+    double Lx = random_double(5.0, 70.0);   //domain size Lx
+    double Ly = random_double(5.0, 70.0);   //domain size Ly
     int Nx = random_int(10, 250);           //degrees of freedom Nx
     int Ny = random_int(10, 250);           //degrees of freedom Ny
-    double T = random_double(0.5, 25.0);    //total time T
+    double T = random_double(1, 25.0);      //total time T
     double dt = random_double(0.01, 1.0);   //time step dt
+
+    std::cout << "domain size Lx=" << Lx << std::endl
+              << "domain size Ly=" << Ly << std::endl
+              << "degree of freedom Nx=" << Nx << std::endl
+              << "degree of freedom Ny=" << Ny << std::endl
+              << "total time=" << T << std::endl
+              << "time step dt=" << dt << std::endl;
 
     //creation of the solver with random parameters 
     WaveSolver solver(Lx, Ly, Nx, Ny, T, dt);
@@ -64,16 +71,16 @@ int main() {
     std::cout << "Solution with Newmark...\n";
     solver.solve_newmark();
 
-    std::cout << "Solution with Crank-Nicolson...\n";
+    /*std::cout << "Solution with Crank-Nicolson...\n";
     solver.solve_crank_nicolson();
 
     //analysis of perfomance 
     std::cout << "Analisi delle prestazioni:\n";
-    solver.analyze_performance();
+    solver.analyze_performance();*/
 
-    //convergence test 
+    /*//convergence test 
     std::cout << "Convergence test:\n";
-    solver.test_convergence();
+    solver.test_convergence();*/
 
     return 0;
 }
