@@ -14,8 +14,21 @@
 #include <functional>                           //for using std::function objects
 //end libraries 
 
+using namespace dealii;
 
-//the WaveSolver class is responsible for solving the wave equation using numerical methods such as Newmark and Crank-Nicolson
+
+
+// Define a class to represent the exact solution for computing the error
+class ExactSolution : public Function<2> {
+public:
+    virtual double value(const Point<2> &p, const unsigned int /*component*/ = 0) const override {
+        return std::sin(M_PI * p[0]) * std::sin(M_PI * p[1]);  // Example analytical solution
+    }
+};
+
+
+
+//the WaveSolver class is responsible for solving the wave equation using numerical methods such as Crank-Nicolson
 class WaveSolver {
 public:
     //constructor of the class, which defines the dimensions of the domain and the time step. Lx, Ly are the dimensions of the 2D domain
@@ -49,21 +62,12 @@ void check_for_empty_matrix(const dealii::SparseMatrix<double>& matrix);
 
     void output_to_dx(double time);
 
-    //function to solve the equation using the Newmark method
-    void solve_newmark();
-
     //function to solve the equation using the Crank-Nicolson method
     void solve_crank_nicolson();
 
     //function to analyze the performance of the solver (e.g., computation time)
     void analyze_performance() const;
-
-    //function to calculate the error between the numerical solution and the exact solution
-    //it returns an error value
-    double calculate_error(); 
-
-    //function to test the convergence of the numerical method (convergence with respect to spatial or temporal steps)
-    void test_convergence();  //declaration of the function
+     double compute_error() const;  // Computes the error (L2 norm) of the solution
 
 
 private:
@@ -82,6 +86,7 @@ private:
 
     //function to reset the solutions to initial values before a new time step
     void reset_solutions();
+
 
     //main simulation parameters:
     const double Lx, Ly;  //dimensions of the 2D domain

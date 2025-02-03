@@ -1,3 +1,0 @@
-/home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project/build/CMakeFiles/project.dir
-/home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project/build/CMakeFiles/edit_cache.dir
-/home/francescapieruz/nmpde-labs-aa-24-25/nmpde_Wave_Equation_Project/build/CMakeFiles/rebuild_cache.dir

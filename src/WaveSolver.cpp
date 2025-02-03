@@ -10,6 +10,7 @@
 #include <deal.II/dofs/dof_tools.h>        //for handling degrees of freedom
 #include <deal.II/lac/dynamic_sparsity_pattern.h>  //for managing dynamic sparsity pattern
 #include <deal.II/numerics/vector_tools.h> //for vector operations
+#include <deal.II/dofs/dof_handler.h>
 #include <fstream>                         //for file output
 #include <cmath>                           //for mathematical functions like sin
 #include <chrono>                          //for measuring execution time
@@ -48,9 +49,10 @@ WaveSolver::WaveSolver(double Lx, double Ly, int Nx, int Ny, double T, double dt
 
     // Crea una mesh suddivisa in Nx celle in x e Ny celle in y.
     dealii::GridGenerator::subdivided_hyper_rectangle(triangulation,
-                                                      {Nx, Ny},
-                                                      dealii::Point<2>(0, 0),
-                                                      dealii::Point<2>(Lx, Ly));
+                                                  {static_cast<unsigned int>(Nx), static_cast<unsigned int>(Ny)},
+                                                  dealii::Point<2>(0, 0),
+                                                  dealii::Point<2>(Lx, Ly));
+
 
     // Stampa di debug: verifica il numero di celle attive
     std::cout << "Numero di celle attive: " << triangulation.n_active_cells() << std::endl;
@@ -305,99 +307,6 @@ bool WaveSolver::solve_linear_system(dealii::SparseMatrix<double>& matrix, deali
         return false;
     }
 }
-void WaveSolver::solve_newmark() {
-    try {
-        dealii::Vector<double> laplacian(solution.size());
-
-        // Creazione del file PVD per la raccolta dei file VTU
-        std::ofstream pvd_file("solution.pvd");
-        pvd_file << "<?xml version=\"1.0\"?>\n";
-        pvd_file << "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
-        pvd_file << "<Collection>\n";
-
-        /* Stampa della matrice system_matrix per il debug
-        std::cout << "System Matrix (81x81):\n";*/
-        print_matrix(system_matrix);
-
-        /* Stampa della soluzione iniziale per il debug
-        std::cout << "Initial solution:\n";
-        for (unsigned int i = 0; i < solution.size(); ++i) {
-            std::cout << solution[i] << " ";
-        }
-        std::cout << std::endl;*/
-
-        // Loop per i passi temporali
-        for (double t = 0; t < T; t += dt) {
-            // Applicazione delle condizioni al contorno
-            apply_boundary_conditions(t);
-
-            // Calcolo del laplaciano della soluzione corrente
-            system_matrix.vmult(laplacian, solution);
-
-            // Stampa del laplaciano per il debug
-            /*std::cout << "Laplacian at time " << t << ":\n";
-            for (unsigned int i = 0; i < laplacian.size(); ++i) {
-                std::cout << laplacian[i] << " ";
-            }
-            std::cout << std::endl;*/
-
-            rhs_vector = laplacian;
-
-            // Applicazione del termine sorgente, se presente
-            if (source_function) {
-                for (unsigned int i = 0; i < rhs_vector.size(); ++i) {
-                    double x = dof_handler.get_fe().get_unit_support_points()[i][0];
-                    double y = dof_handler.get_fe().get_unit_support_points()[i][1];
-                    double source_val = source_function(x * Lx, y * Ly, t);
-                    if (std::isnan(source_val)) {
-                        std::cerr << "NaN detected in source function at time " << t << std::endl;
-                        exit(1); // Uscita in caso di NaN nel termine sorgente
-                    }
-                    rhs_vector[i] += source_val * dt * dt;
-                }
-            }
-
-            // Verifica se ci sono NaN nel vettore rhs_vector
-            for (unsigned int i = 0; i < rhs_vector.size(); ++i) {
-                if (std::isnan(rhs_vector[i])) {
-                    std::cerr << "NaN detected in rhs_vector at time " << t << std::endl;
-                    exit(1); // Uscita in caso di NaN
-                }
-            }
-
-            // Risoluzione del sistema lineare usando Bicgstab con precondizionatore Jacobi
-            if (!solve_linear_system(system_matrix, solution, rhs_vector)) {
-                throw std::runtime_error("Error during Newmark: failed to solve linear system at time " +  std::to_string(t));
-            }
-
-            // Aggiornamento delle soluzioni per il passo successivo
-            older_solution.swap(old_solution);
-            old_solution.swap(solution);
-
-            // Scrittura del file VTU per il passo corrente
-            std::string vtu_filename = "solution_" + std::to_string(int(t / dt)) + ".vtu";
-            std::ofstream vtu_file(vtu_filename);
-            dealii::DataOut<2> data_out;
-            data_out.attach_dof_handler(dof_handler);
-            data_out.add_data_vector(solution, "solution");
-            data_out.build_patches();
-            data_out.write_vtu(vtu_file);
-            vtu_file.close();
-
-            // Aggiunta del riferimento al file VTU nel file PVD
-            pvd_file << "<DataSet timestep=\"" << t << "\" group=\"\" part=\"0\" file=\"" << vtu_filename << "\"/>\n";
-        }
-
-        // Chiusura del file PVD
-        pvd_file << "</Collection>\n";
-        pvd_file << "</VTKFile>\n";
-        pvd_file.close();
-    } catch (const std::exception &e) {
-        std::cerr << "Error during Newmark: " << e.what() << std::endl;
-        exit(1);
-    }
-}
-
 
 
 //start Crank-Nicolson method to solve the wave equation
@@ -495,92 +404,9 @@ void WaveSolver::output_vtk(double time) {
 //end
 
 
-double WaveSolver::calculate_error() {
-    double error_l2 = 0.0, error_linf = 0.0;
-    double dx = Lx / Nx, dy = Ly / Ny;
-
-    // Loop su tutti i punti della griglia
-    for (unsigned int i = 0; i < Nx; ++i) {
-        for (unsigned int j = 0; j < Ny; ++j) {
-            double x = i * dx, y = j * dy;
-
-            // Calcola la soluzione esatta in (x, y)
-            double exact_value = std::sin(M_PI * x) * std::sin(M_PI * y);
-
-            // Accedi correttamente alla soluzione numerica nella posizione (i, j)
-            double numerical_value = solution(i + j * Nx);  // Assicurati che questa sia la corretta espressione per l'accesso
-
-            // Calcola la differenza tra la soluzione numerica e quella esatta
-            double diff = numerical_value - exact_value;
-
-            // Calcola l'errore L2 e L∞
-            error_l2 += diff * diff * dx * dy;
-            error_linf = std::max(error_linf, std::abs(diff));
-        }
-    }
-
-    // Calcola la norma L2
-    error_l2 = std::sqrt(error_l2);
-
-    // Gestione degli errori (infinite o NaN)
-    if (std::isinf(error_l2) || std::isinf(error_linf)) {
-        std::cout << "Error: Inf\n";
-    } else if (std::isnan(error_l2) || std::isnan(error_linf)) {
-        std::cout << "Error: NaN\n";
-    } else {
-        // Stampa gli errori L2 e L∞ con precisione fissa
-        std::cout << std::fixed << std::setprecision(6);
-        std::cout << "L2 Error: " << error_l2 << ", L∞ Error: " << error_linf << std::endl;
-    }
-
-    return error_l2;
-}
-
-//end 
-
-
-void WaveSolver::test_convergence() {
-    int Nx_start = 50, Ny_start = 50;  // valori iniziali per Nx e Ny
-    double Lx = 10.0, Ly = 10.0, T = 1.0, dt_start = 0.0001; // inizializza i parametri
-
-    // Inizializza un loop per migliorare la griglia e il passo temporale
-    for (int i = 0; i < 3; ++i) {
-        // Calcola Nx e Ny per il livello corrente
-        int Nx = Nx_start * std::pow(2, i);
-        int Ny = Ny_start * std::pow(2, i);
-        
-        // Riduci il passo temporale dt
-        double dt = dt_start / std::pow(2, i);
-
-        // Crea un nuovo solver per ogni passo di convergenza
-        WaveSolver solver(Lx, Ly, Nx, Ny, T, dt);  
-
-        // Imposta le condizioni iniziali per la simulazione
-        solver.set_initial_conditions(
-            [](double x, double y) { return std::sin(M_PI * x) * std::sin(M_PI * y); },
-            [](double x, double y) { return 0.0; } // velocità iniziale = 0
-        );
-
-        // Risolvi il problema usando il metodo Newmark
-        solver.solve_newmark(); // Risolve con Newmark
-        double error_newmark = solver.calculate_error(); // Calcola l'errore per Newmark
-
-        std::cout << std::fixed << std::setprecision(6);
-        std::cout << "Newmark Method - Error for Nx = " << Nx << ", Ny = " << Ny << ", dt = " << dt << ": " << error_newmark << std::endl;
-
-        // Risolvi il problema usando il metodo Crank-Nicolson
-        solver.solve_crank_nicolson(); // Risolve con Crank-Nicolson
-        double error_cn = solver.calculate_error(); // Calcola l'errore per Crank-Nicolson
-
-        std::cout << "Crank-Nicolson Method - Error for Nx = " << Nx << ", Ny = " << Ny << ", dt = " << dt << ": " << error_cn << std::endl;
-    }
-}
-
-
-
-//start 
+//start analyze_performance
 void WaveSolver::analyze_performance() const {
-    //benchmark function to measure the execution time of different solving methods (performance)
+    //benchmark function to measure the execution time of Crank-Nicolson method
     auto benchmark = [&](void (WaveSolver::*solve_method)(), const std::string &name) {
         // Measure the time taken by the solve method for a single run
         auto start = std::chrono::high_resolution_clock::now();
@@ -593,7 +419,28 @@ void WaveSolver::analyze_performance() const {
         std::cout << name << " Scheme: " << elapsed_time << " sec\n";
     };
 
-    // Benchmark the Newmark and Crank-Nicolson methods (one execution each)
-    benchmark(&WaveSolver::solve_newmark, "Newmark");
+    // Benchmark the Crank-Nicolson method (one execution)
     benchmark(&WaveSolver::solve_crank_nicolson, "Crank-Nicolson");
 }
+
+
+
+
+
+double WaveSolver::compute_error() const {
+    MappingQ1<2> mapping;
+    QGauss<2> quadrature(3);
+    Vector<double> error_per_cell(triangulation.n_active_cells());
+
+    // Create an instance of the ExactSolution class
+    ExactSolution exact_solution;
+    
+    // Compute the L2 norm difference between numerical and exact solutions
+    VectorTools::integrate_difference(mapping, dof_handler, solution,
+                                      exact_solution, error_per_cell,
+                                      quadrature, VectorTools::L2_norm);
+
+    return VectorTools::compute_global_error(triangulation, error_per_cell, VectorTools::L2_norm);
+}
+
+
