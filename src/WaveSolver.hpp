@@ -68,10 +68,13 @@ void check_for_empty_matrix(const dealii::SparseMatrix<double>& matrix);
     //function to analyze the performance of the solver (e.g., computation time)
     void analyze_performance() const;
      double compute_error() const;  // Computes the error (L2 norm) of the solution
+      //function to apply boundary conditions at each time step
+    void apply_boundary_conditions(double time);
 
 
 private:
     dealii::Vector<double> system_rhs; //declaration of the RHS vector
+    std::map<unsigned int, double> boundary_values; // Assumendo che sia una mappa di valori al cont
 
     //function to set up the linear system (matrices, vectors, etc.) for the numerical solution
     void setup_system();
@@ -81,8 +84,7 @@ private:
 
     bool solve_linear_system(dealii::SparseMatrix<double>& matrix, dealii::Vector<double>& sol, const dealii::Vector<double>& rhs);
 
-    //function to apply boundary conditions at each time step
-    void apply_boundary_conditions(double time);
+   
 
     //function to reset the solutions to initial values before a new time step
     void reset_solutions();

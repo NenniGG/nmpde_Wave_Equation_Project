@@ -24,8 +24,8 @@ int main() {
     // Generazione casuale dei parametri della simulazione
     double Lx = random_double(5.0, 7.0);   // Dimensione del dominio Lx
     double Ly = random_double(5.0, 7.0);   // Dimensione del dominio Ly
-    unsigned int Nx = static_cast<unsigned int>(random_int(1, 15));  // Gradi di libertà Nx
-    unsigned int Ny = static_cast<unsigned int>(random_int(1, 15));  // Gradi di libertà Ny
+    unsigned int Nx = static_cast<unsigned int>(random_int(1, 20));  // Gradi di libertà Nx
+    unsigned int Ny = static_cast<unsigned int>(random_int(1, 20));  // Gradi di libertà Ny
     double T = random_double(1.0, 3.0);    // Tempo totale T
     double dt = random_double(0.0001, 0.0003); // Passo temporale dt
 
@@ -48,28 +48,25 @@ int main() {
     };
 
     auto random_u1 = [](double x, double y) {
-        return 1e-6 * std::sin(M_PI * x) * std::sin(M_PI * y);  // Piccola velocità iniziale
+        return 1 * std::sin(M_PI * x) * std::sin(M_PI * y);  // Piccola velocità iniziale
     };
 
     // Impostazione delle condizioni iniziali
     solver.set_initial_conditions(random_u0, random_u1);
 
-    // Funzione sorgente con maggiore controllo numerico
-    auto random_source = [](double x, double y, double t) {
-        if (std::abs(t) > 1000) {  // Limita t per evitare oscillazioni molto grandi
-            return 0.0;
-        }
-        return std::sin(M_PI * x) * std::sin(M_PI * y) * std::cos(t);
-    };
+// Imposta la funzione della condizione al contorno
+    solver.set_boundary_condition([](double x, double y, double t) {
+        return 0.0;  // Condizioni di Dirichlet nulle (u = 0 sui bordi)
+    });
 
-    // Impostazione della funzione sorgente
-    solver.set_source_function(random_source);
+    // Imposta la funzione sorgente
+    solver.set_source_function([](double x, double y, double t) {
+        return std::sin(x + y) / (t * t + 1.0);
+    });
 
-    // Condizioni al contorno fisse
-    auto random_boundary = [](double /*x*/, double /*y*/, double /*t*/) {
-        return 0.0;
-    };
-    solver.set_boundary_condition(random_boundary);
+    // **Applica le condizioni al contorno** al tempo iniziale
+    solver.apply_boundary_conditions(0.0);
+
 
     // Risoluzione con Crank-Nicolson
     std::cout << "Solution with Crank-Nicolson...\n";

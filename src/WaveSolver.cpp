@@ -233,40 +233,28 @@ void WaveSolver::set_source_function(const std::function<double(double, double, 
     source_function = f;
 }
 //end 
-
-
-//start apply 
-//function made to apply boundary conditions to the system 
 void WaveSolver::apply_boundary_conditions(double time) {
-    if (boundary_condition) {
-        std::map<dealii::types::global_dof_index, double> boundary_values;
+    for (const auto &bc : boundary_values) {
+        unsigned int boundary_index = bc.first;  // Indice del nodo di bordo
+        double boundary_value = bc.second;       // Valore della condizione al contorno
+        
+        // Imposta la soluzione nei nodi di bordo
+        solution(boundary_index) = boundary_value;
 
-        // Verifica che le condizioni al contorno siano definite correttamente
-        class BoundaryFunction : public dealii::Function<2> {
-        public:
-            BoundaryFunction(const std::function<double(double, double, double)>& bc, double time) : bc(bc), time(time) {}
-            virtual double value(const dealii::Point<2> &p, const unsigned int = 0) const override {
-                double val = bc(p[0], p[1], time);
-                if (std::isnan(val) || std::isinf(val)) {
-                    std::cerr << "Invalid boundary value at " << p << " at time " << time << std::endl;
-                    throw std::runtime_error("NaN or Inf detected in boundary condition.");
-                }
-                return val;
-            }
-        private:
-            const std::function<double(double, double, double)>& bc;
-            double time;
-        };
-
-        dealii::VectorTools::interpolate_boundary_values(dof_handler, 0, BoundaryFunction(boundary_condition, time), boundary_values);
-        for (const auto &entry : boundary_values) {
-            solution[entry.first] = entry.second;
-            rhs_vector[entry.first] = entry.second;  // Spesso, la gestione delle condizioni al contorno avviene dopo l'assemblaggio del sistema.
+        // Pulisce la riga corrispondente nella matrice di sistema
+        for (unsigned int j = 0; j < system_matrix.m(); ++j) {
+            system_matrix(boundary_index, j) = 0.0;
         }
+
+        // Imposta un 1 sulla diagonale per fissare il valore della soluzione
+        system_matrix(boundary_index, boundary_index) = 1.0;
+
+        // Aggiorna il termine noto
+        rhs_vector(boundary_index) = boundary_value;
     }
 }
 
-//end 
+
 
 
 void print_matrix(const dealii::SparseMatrix<double> &system_matrix) {
