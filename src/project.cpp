@@ -22,8 +22,8 @@ int random_int(int min, int max) {
 
 int main() {
     // Generazione casuale dei parametri della simulazione
-    double Lx = random_double(5.0, 7.0);   // Dimensione del dominio Lx
-    double Ly = random_double(5.0, 7.0);   // Dimensione del dominio Ly
+    double Lx = random_int(1, 7);   // Dimensione del dominio Lx
+    double Ly = random_int(1, 7);   // Dimensione del dominio Ly
     unsigned int Nx = static_cast<unsigned int>(random_int(1, 20));  // Gradi di libertà Nx
     unsigned int Ny = static_cast<unsigned int>(random_int(1, 20));  // Gradi di libertà Ny
     double T = random_double(1.0, 3.0);    // Tempo totale T
@@ -41,9 +41,6 @@ int main() {
     
     // Condizioni iniziali più robuste
     auto random_u0 = [](double x, double y) {
-        if (x < 0 || x > 1 || y < 0 || y > 1) {
-            return 0.0;  // Imposta a zero se i valori sono fuori intervallo
-        }
         return std::sin(M_PI * x) * std::sin(M_PI * y);
     };
 

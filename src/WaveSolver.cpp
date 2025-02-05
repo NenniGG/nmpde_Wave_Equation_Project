@@ -307,7 +307,7 @@ void WaveSolver::solve_crank_nicolson() {
         // Creazione del file PVD per la raccolta dei file VTU
         std::ofstream pvd_file("solution.pvd");
         pvd_file << "<?xml version=\"1.0\"?>\n";
-        pvd_file << "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+        pvd_file << "<VTUFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
         pvd_file << "<Collection>\n";
 
         // Stampa della matrice system_matrix per il debug
@@ -366,7 +366,7 @@ void WaveSolver::solve_crank_nicolson() {
 
         // Chiusura del file PVD
         pvd_file << "</Collection>\n";
-        pvd_file << "</VTKFile>\n";
+        pvd_file << "</VTUFile>\n";
         pvd_file.close();
 
     } catch (const std::exception &e) {
@@ -377,19 +377,6 @@ void WaveSolver::solve_crank_nicolson() {
 
 //end 
 
-
-//function to produce output in vtk file 
-void WaveSolver::output_vtk(double time) {
-    constexpr unsigned int dim = 2;
-    dealii::DataOut<dim> data_out;
-    data_out.attach_dof_handler(dof_handler);
-    data_out.add_data_vector(solution, "solution");
-    data_out.build_patches();  // Build patches only once
-    std::string vtk_filename = "solution-" + std::to_string(time) + ".vtk";
-    std::ofstream vtk_file(vtk_filename);
-    data_out.write_vtk(vtk_file);
-}
-//end
 
 
 //start analyze_performance
