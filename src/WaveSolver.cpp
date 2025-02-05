@@ -1,5 +1,6 @@
 //libraries 
 #include "WaveSolver.hpp"
+#include <deal.II/grid/grid_out.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/precondition.h>      //for Jacobi preconditioner
 #include <deal.II/lac/solver_gmres.h>      //for GMRES
@@ -131,6 +132,15 @@ void WaveSolver::setup_system() {
         check_for_nan_in_vector(solution);
         check_for_nan_in_vector(old_solution);
         check_for_nan_in_vector(older_solution);
+
+        //print cose:
+        std::ofstream out("grid-1.svg");
+        dealii::GridOut       grid_out;
+        grid_out.write_svg(triangulation, out);
+        std::cout << "Grid written to grid-1.svg" << std::endl;
+
+        std::ofstream outs("sparsity-pattern-1.svg");
+        sparsity_pattern.print_svg(outs);
 
     } catch (const std::exception& e) {
         std::cerr << "Error during setup_system: " << e.what() << std::endl;
@@ -307,14 +317,14 @@ void WaveSolver::solve_crank_nicolson() {
         // Creazione del file PVD per la raccolta dei file VTU
         std::ofstream pvd_file("solution.pvd");
         pvd_file << "<?xml version=\"1.0\"?>\n";
-        pvd_file << "<VTUFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
+        pvd_file << "<VTKFile type=\"Collection\" version=\"0.1\" byte_order=\"LittleEndian\">\n";
         pvd_file << "<Collection>\n";
 
         // Stampa della matrice system_matrix per il debug
         print_matrix(system_matrix);
 
         // Loop per i passi temporali
-        for (double t = 0; t < T; t += dt) {
+        for (double t = 0; t < 10*dt/*T*/; t += dt) {
             // Applicazione delle condizioni al contorno
             apply_boundary_conditions(t);
 
@@ -341,11 +351,21 @@ void WaveSolver::solve_crank_nicolson() {
             // Calcoliamo il termine rhs per la soluzione precedente (vecchia soluzione)
             rhs_vector_old = rhs_vector_new; // Vettore rhs aggiornato per la soluzione precedente
 
+            /*printing solution vector for debug
+            std::cout << "solution at step " << t/dt << ":" << std::endl;
+            for (int i = 0; i < solution.size(); i++)
+                cout << solution[i] << std::endl;*/
+
             // Risoluzione del sistema lineare usando Bicgstab con precondizionatore Jacobi
             if (!solve_linear_system(system_matrix, solution, rhs_vector_old)) {
                 throw std::runtime_error("Error during Crank-Nicolson: failed to solve linear system at time " + std::to_string(t));
             }
 
+            /*printing solution vector for debug
+            std::cout << "solution at step " << t/dt << ":" << std::endl;
+            for (int i = 0; i < solution.size(); i++)
+                cout << solution[i] << std::endl;*/
+            
             // Aggiornamento delle soluzioni per il passo successivo
             older_solution.swap(old_solution);
             old_solution.swap(solution);
@@ -366,7 +386,7 @@ void WaveSolver::solve_crank_nicolson() {
 
         // Chiusura del file PVD
         pvd_file << "</Collection>\n";
-        pvd_file << "</VTUFile>\n";
+        pvd_file << "</VTKFile>\n";
         pvd_file.close();
 
     } catch (const std::exception &e) {
@@ -374,7 +394,6 @@ void WaveSolver::solve_crank_nicolson() {
         exit(1);
     }
 }
-
 //end 
 
 
