@@ -177,16 +177,19 @@ namespace WaveEq
 
   // Equation Data Implementations
   template <int dim>
-  double InitialValuesU<dim>::value(const Point<dim> &, const unsigned int) const
+  double InitialValuesU<dim>::value(const Point<dim> &p, const unsigned int) const
   {
-    return 0;
+    const double r2 = p.square();
+    return std::exp(-100 * r2); // Picco al centro
   }
+
 
   template <int dim>
   double InitialValuesV<dim>::value(const Point<dim> &, const unsigned int) const
   {
-    return 0;
+    return 0.0;
   }
+
 
   template <int dim>
   double RightHandSide<dim>::value(const Point<dim> &, const unsigned int) const
@@ -197,20 +200,22 @@ namespace WaveEq
   template <int dim>
   double BoundaryValuesU<dim>::value(const Point<dim> &p, const unsigned int) const
   {
-    if ((this->get_time() <= 0.5) && (p[0] < 0) && (p[1] < 1. / 3) && (p[1] > -1. / 3))
-      return std::sin(this->get_time() * 4 * numbers::PI);
+    if ((std::abs(p[0] + 1.0) < 1e-10) && (this->get_time() <= 2.0))
+      return std::sin(2 * numbers::PI * this->get_time());
     else
-      return 0;
+      return 0.0;
   }
+
 
   template <int dim>
   double BoundaryValuesV<dim>::value(const Point<dim> &p, const unsigned int) const
   {
-    if ((this->get_time() <= 0.5) && (p[0] < 0) && (p[1] < 1. / 3) && (p[1] > -1. / 3))
-      return std::cos(this->get_time() * 4 * numbers::PI) * 4 * numbers::PI;
+    if ((std::abs(p[0] + 1.0) < 1e-10) && (this->get_time() <= 2.0))
+      return 2 * numbers::PI * std::cos(2 * numbers::PI * this->get_time());
     else
-      return 0;
+      return 0.0;
   }
+
 
   // Explicit template instantiation
   template class WaveEquation<2>;
